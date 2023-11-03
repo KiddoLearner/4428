@@ -28,28 +28,36 @@
 </nav>
 
     <h1>Hello, world!</h1> 
-<button type="button" class="btn btn-dark">Dark</button>
+		<table class="table" border="3">
+			<tr style="text-align: center; vertical-align: middle;">
+				<td>
+					  <div class="make-center">
+					  <input type="text" id="broadcast-id" value="EIE4428-Project" autocorrect=off autocapitalize=off size=20>
+					  <button id="open-or-join">Open or Join Broadcast</button>
+
+					  <div class="make-center" id="broadcast-viewers-counter"></div>
+
+					  <video id="video-preview" controls loop></video></td>
+				<td><button id="startRecord" type="button" class="btn btn-primary">Start Recording</button>
+						<br><button id="stopRecord" type="button" class="btn btn-primary">Stop Recording</button>
+						<br><button id="displayRecord" type="button" class="btn btn-primary">Display Recording</button>
+				</td>
+				</tr>
+
+</table>
 	
-<section class="make-center">
-      <p style="margin: 0; padding: 0; padding-bottom: 20px;">
-          <div class="make-center">
-          <input type="text" id="broadcast-id" value="EIE4428-Project" autocorrect=off autocapitalize=off size=20>
-          <button id="open-or-join">Open or Join Broadcast</button>
 
-          <div class="make-center" id="broadcast-viewers-counter"></div>
-      </p>
-
-      <video id="video-preview" controls loop></video>
-  </section>
   
   <script src="https://muazkhan.com:9001/dist/RTCMultiConnection.min.js"></script>
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 <script src="https://muazkhan.com:9001/socket.io/socket.io.js"></script>
-  
+  <script src="https://www.webrtc-experiment.com/RecordRTC.js"></script>
   <script>
 // recording is disabled because it is resulting for browser-crash
 // if you enable below line, please also uncomment above "RecordRTC.js"
-var enableRecordings = false;
+
+
+var enableRecordings = true;
 
 var connection = new RTCMultiConnection();
 
@@ -64,7 +72,7 @@ connection.iceServers = [{
     ]
 }];
 
-// enable only relay ip-addresses
+// enable only relay ip-addresses 
 connection.candidates = {
     turn: true,
     stun: true,
@@ -268,6 +276,49 @@ document.getElementById('open-or-join').onclick = function() {
     });
 };
 
+<!-- document.getElementById('startRecord').onclick = function(){ -->
+
+<!-- var broadcastId = document.getElementById('broadcast-id').value; -->
+<!-- // e.type == 'remote' || 'local'  -->
+    <!-- connection.streams[broadcastId].startRecording({  -->
+        <!-- video: true  -->
+    <!-- });  -->
+
+    <!-- // record 10 sec audio/video  -->
+    <!-- var recordingInterval = 10 * 10000;  -->
+
+    <!-- setTimeout(function () {  -->
+        <!-- connection.streams[broadcastId].stopRecording(function (blob) {  -->
+            <!-- var mediaElement = document.createElement('video');  -->
+            <!-- mediaElement.src = URL.createObjectURL(blob.video);  -->
+            <!-- document.documentElement.appendChild(h2);  -->
+        <!-- });  -->
+    <!-- }, recordingInterval)  -->
+
+<!-- }; -->
+
+document.getElementById('startRecord').onclick = function(){
+   // console.log("test");
+    repeatedlyRecordStream(videoPreview.srcObject);
+}
+
+document.getElementById("stopRecord").addEventListener('click', stoprecord);
+
+function stoprecord(){
+   // console.log("test");
+   connection.currentRecorder.stopRecording();    
+   console.log("recorder" + connection.currentRecorder);
+   console.log("get blob " + connection.currentRecorder.getBlob());
+
+}
+
+document.getElementById('displayRecord').onclick = function(){
+    var mediaElement = document.createElement('video'); 
+    mediaElement.src = URL.createObjectURL(connection.currentRecorder.getBlob());   
+	mediaElement.play();
+	console.log(connection.currentRecorder.blob)
+}
+
 connection.onstreamended = function() {};
 
 connection.onleave = function(event) {
@@ -332,6 +383,7 @@ function repeatedlyRecordStream(stream) {
         });
     }, 30 * 1000); // 30-seconds
 };
+
 
 function disableInputButtons() {
     document.getElementById('open-or-join').disabled = true;
