@@ -169,9 +169,11 @@ window.onbeforeunload = function() {
 var videoPreview = document.getElementById('video-preview');
 
 connection.onstream = function(event) {
+    console.log(event.type);
     if (connection.isInitiator && event.type !== 'local') {
         return;
     }
+    console.log(event.stream);
 
     connection.isUpperUserLeft = false;
     videoPreview.srcObject = event.stream;
