@@ -61,6 +61,9 @@ var enableRecordings = true;
 
 var connection = new RTCMultiConnection();
 
+connection.codecs.video  = 'VP9';
+  connection.preferVP9 = true;
+	  
 // https://www.rtcmulticonnection.org/docs/iceServers/
 // use your own TURN-server here!
 connection.iceServers = [{
