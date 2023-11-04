@@ -71,6 +71,8 @@ connection.iceServers = [{
         'stun:stun.l.google.com:19302?transport=udp',
     ]
 }];
+console.log("checker");
+console.log(connection.isInitiator);
 
 // its mandatory in v3
 connection.enableScalableBroadcast = true;
@@ -162,13 +164,9 @@ window.onbeforeunload = function() {
 var videoPreview = document.getElementById('video-preview');
 
 connection.onstream = function(event) {
-
-    console.log("Local or Remote" + event.type);
     if (connection.isInitiator && event.type !== 'local') {
         return;
     }
-    console.log(event.stream);
-
     connection.isUpperUserLeft = false;
     videoPreview.srcObject = event.stream;
     videoPreview.play();
@@ -224,15 +222,16 @@ connection.onstream = function(event) {
             // Firefox seems UN_ABLE to record remote MediaStream
             // WebAudio solution merely records audio
             // so recording is skipped for Firefox.
-            //if (connection.DetectRTC.browser.name === 'Chrome') {
-            //    repeatedlyRecordStream(event.stream);
-            //}
+            //  if (connection.DetectRTC.browser.name === 'Chrome') {
+            //      repeatedlyRecordStream(event.stream);
+            //  }
         });
     }
 
     // to keep room-id in cache
     localStorage.setItem(connection.socketMessageEvent, connection.sessionid);
-	console.log(connection.candidates);
+	console.log("checker2");
+	console.log(event.stream.getTracks().getSettings());
 };
 
 
