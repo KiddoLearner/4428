@@ -76,7 +76,7 @@ connection.iceServers = [{
 connection.candidates = {
     turn: true,
     stun: true,
-    host: false
+    host: true
 };
 
 // its mandatory in v3
@@ -149,8 +149,8 @@ connection.connectSocket(function(socket) {
 
         // host i.e. sender should always use this!
         connection.sdpConstraints.mandatory = {
-            OfferToReceiveVideo: false,
-            OfferToReceiveAudio: false
+            OfferToReceiveVideo: true,
+            OfferToReceiveAudio: true
         };
         connection.session = typeOfStreams;
 
@@ -170,7 +170,7 @@ var videoPreview = document.getElementById('video-preview');
 
 connection.onstream = function(event) {
 
-    console.log(event.type);
+    console.log("Local or Remote" + event.type);
     if (connection.isInitiator && event.type !== 'local') {
         return;
     }
