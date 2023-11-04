@@ -60,7 +60,8 @@
 var enableRecordings = true;
 
 var connection = new RTCMultiConnection();
-
+connection.codecs.video  = 'VP8';
+	  
 // https://www.rtcmulticonnection.org/docs/iceServers/
 // use your own TURN-server here!
 connection.iceServers = [{
