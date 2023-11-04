@@ -67,8 +67,7 @@ connection.iceServers = [{
     'urls': [
         'stun:stun.l.google.com:19302',
         'stun:stun1.l.google.com:19302',
-        'stun:stun2.l.google.com:19302',
-        'stun:stun.l.google.com:19302?transport=udp',
+        'stun:stun2.l.google.com:19302'
     ]
 }];
 
@@ -244,7 +243,11 @@ connection.onstream = function(event) {
 
     // to keep room-id in cache
     localStorage.setItem(connection.socketMessageEvent, connection.sessionid);
-	console.log(connection.candidates);
+    console.log("checker2");
+	console.log( event.stream.getTracks() );
+    console.log( event.stream.getTracks()[0] );
+   console.log( event.stream.getTracks()[0].getSettings() );
+   console.log( event.stream.getTracks()[1].getSettings() );
 };
 
 
