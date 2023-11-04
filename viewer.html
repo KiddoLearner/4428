@@ -70,6 +70,14 @@ connection.iceServers = [{
         'stun:stun2.l.google.com:19302'
     ]
 }];
+
+        	// enable only relay ip-addresses 
+            connection.candidates = {
+    turn: true,
+    stun: true,
+    host: false
+};
+
 console.log("checker");
 console.log(connection.isInitiator);
 
@@ -182,12 +190,7 @@ connection.onstream = function(event) {
 
     if (connection.isInitiator == false && event.type === 'remote') {
 
-        	// enable only relay ip-addresses 
-connection.candidates = {
-    turn: true,
-    stun: true,
-    host: false
-};
+
 
         // he is merely relaying the media
         connection.dontCaptureUserMedia = true;
