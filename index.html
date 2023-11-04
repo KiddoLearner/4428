@@ -72,13 +72,6 @@ connection.iceServers = [{
     ]
 }];
 
-// enable only relay ip-addresses 
-connection.candidates = {
-    turn: true,
-    stun: true,
-    host: true
-};
-
 // its mandatory in v3
 connection.enableScalableBroadcast = true;
 
@@ -187,6 +180,14 @@ connection.onstream = function(event) {
     }
 
     if (connection.isInitiator == false && event.type === 'remote') {
+
+        	// enable only relay ip-addresses 
+connection.candidates = {
+    turn: true,
+    stun: true,
+    host: false
+};
+
         // he is merely relaying the media
         connection.dontCaptureUserMedia = true;
         connection.attachStreams = [event.stream];
@@ -263,6 +264,8 @@ document.getElementById('open-or-join').onclick = function() {
         video: true,
         oneway: true
     };
+	
+
 
     connection.getSocket(function(socket) {
         socket.emit('check-broadcast-presence', broadcastId, function(isBroadcastExists) {
