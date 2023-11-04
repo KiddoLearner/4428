@@ -200,8 +200,7 @@ connection.onstream = function(event) {
                             peer.removeStream(localStream);
                         });
                         event.stream.getTracks().forEach(function(track) {
-                            // peer.addTrack(track, event.stream);
-				peer.addTrack( event.stream.getTracks()[1], event.stream);
+                            peer.addTrack(track, event.stream);
                         });
                         connection.dontAttachStream = true;
                         connection.renegotiate(p);
