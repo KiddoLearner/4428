@@ -181,13 +181,6 @@ connection.onstream = function(event) {
 
     if (connection.isInitiator == false && event.type === 'remote') {
 
-        	// enable only relay ip-addresses 
-connection.candidates = {
-    turn: true,
-    stun: true,
-    host: false
-};
-
         // he is merely relaying the media
         connection.dontCaptureUserMedia = true;
         connection.attachStreams = [event.stream];
