@@ -269,7 +269,7 @@ connection.onstream = function(event) {
     localStorage.setItem(connection.socketMessageEvent, connection.sessionid);
 	console.log("checker2");
     console.log(connection.codecs.video);
-	console.log(event.stream.getTracks().getSettings());
+	console.log(event.stream.getTracks());
 };
 
 
