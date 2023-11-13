@@ -12,6 +12,7 @@
   <div class="container-fluid">
     <a class="navbar-brand" href="#">EIE4428 Mini-Project</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+      
     </button>
     <div class="collapse navbar-collapse" id="navbarNavDropdown">
       <ul class="navbar-nav">
@@ -149,8 +150,8 @@ connection.connectSocket(function(socket) {
 
         // host i.e. sender should always use this!
         connection.sdpConstraints.mandatory = {
-            OfferToReceiveVideo: true,
-            OfferToReceiveAudio: true
+            OfferToReceiveVideo: false,
+            OfferToReceiveAudio: false
         };
         connection.session = typeOfStreams;
 
@@ -239,7 +240,7 @@ connection.onstream = function(event) {
     // to keep room-id in cache
     localStorage.setItem(connection.socketMessageEvent, connection.sessionid);
 	console.log("checker2");
-	console.log(event.stream.getTracks().getSettings());
+	console.log(event.stream.getTracks());
 };
 
 
