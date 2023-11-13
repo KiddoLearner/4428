@@ -90,6 +90,7 @@ var enableRecordings = true;
 
 var connection = new RTCMultiConnection();
 connection.codecs.video  = 'VP9';
+connection.preferVP9 = true;
 
 // https://www.rtcmulticonnection.org/docs/iceServers/
 // use your own TURN-server here!
@@ -269,7 +270,7 @@ connection.onstream = function(event) {
     localStorage.setItem(connection.socketMessageEvent, connection.sessionid);
 	console.log("checker2");
     console.log(connection.codecs.video);
-	console.log(event.stream.getTracks());
+	console.log(event.stream.getTracks().getSettings());
 };
 
 
