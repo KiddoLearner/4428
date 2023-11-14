@@ -69,14 +69,33 @@ connection.preferVP9 = true;
 console.log("Check for codecs");
 console.log(connection.codecs.video);
 // https://www.rtcmulticonnection.org/docs/iceServers/
-// use your own TURN-server here!
-connection.iceServers = [{
+// first step, ignore default STUN+TURN servers
+connection.iceServers = [];
+
+// last step, set TURN url (recommended)
+connection.iceServers.push({
+    urls: 'turn:global.turn.twilio.com:3478?transport=udp',
+    credential: 'EexWPvg3zuoK2p+PX/8YwChcNRCZUQ5bzLXeWgAfD28=',
+    username: '19d6211b6cf75d8186670098b7dfbbc9be27a8708d521c87d49b42208b864391'
+});    
+  
+// https://www.rtcmulticonnection.org/docs/iceServers/
+connection.iceServers.push({
     'urls': [
-        'stun:stun.l.google.com:19302',
+     
+        'stun:stun.l.google.com:19302',  
         'stun:stun1.l.google.com:19302',
-        'stun:stun2.l.google.com:19302',
+        'stun:stun2.l.google.com:19302'
     ]
-}];
+}); 
+// use your own TURN-server here!
+// connection.iceServers = [{
+//     'urls': [
+//         'stun:stun.l.google.com:19302',
+//         'stun:stun1.l.google.com:19302',
+//         'stun:stun2.l.google.com:19302',
+//     ]
+// }];
 console.log("checker");
 console.log(connection.isInitiator);
 
