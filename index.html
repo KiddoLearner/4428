@@ -231,8 +231,7 @@ connection.onstream = function(event) {
                         connection.renegotiate(p);
                         connection.dontAttachStream = false;
                         CodecsHandler.prioritize('video/VP9', peer);
-			    console.log("checker3");
-			    console.log(connection.peers[p].codecs.video);
+			console.log("hello 3");
                     }
                 });
             }
