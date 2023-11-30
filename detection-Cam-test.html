@@ -47,7 +47,7 @@
     background-color: rgba(255, 111, 0, 0.85);
     color: #FFF;
     border: 1px dashed rgba(255, 255, 255, 0.7);
-    z-index: 2;
+    z-index: 10;
     font-size: 12px;
     margin: 0;
     }
@@ -112,15 +112,22 @@
 
                 <div class="make-center" id="broadcast-viewers-counter"></div>
                 <div id="liveView" class="videoView" style="display: inline-block;">
-                <video  id="video-view" controls loop width="100%" height="100%"></video>
-                <video  id="video-preview" controls loop width="100%" height="100%"></video>
+                <video  id="video-view" controls loop width="100%" height="100%" ></video>
+                <canvas id="audioWave" hidden></canvas>
+                <video id="video-recorded" width="30%" height="30%" controls hidden></video>
+                <canvas id="capture" hidden></canvas>
+               
+                <video  id="video-preview" controls loop width="100%" height="100%" style = "margin-left:-999px" ></video>
+               
                 <canvas id="time-date"></canvas>
                 <canvas id="faceRecog"></canvas>
                 </div>
         </div>
         <div class="col-mod-6">
             <button id="startRecord" type="button" class="btn btn-primary" disabled>Start Recording</button>
+            <button id="AudioWaveOn" type="button" class="btn btn-primary" disabled>AudioWaveOn</button>
 			<br><button id="stopRecord" type="button" class="btn btn-primary" disabled>Stop Recording</button>
+            <button id="AudioWaveOff" type="button" class="btn btn-primary" disabled>AudioWaveOff</button>
 			<br><button id="displayRecord" type="button" class="btn btn-primary" disabled>Display Recording</button>
             <br><button id="Screenshot" type="button" class="btn btn-primary" disabled>Screenshot</button>
         </div>                 
@@ -129,8 +136,8 @@
     <div class="container-fluid">
     <div class="row-g-5">
         <div class="col mod-6" class="make-center">
-            <video id="video-recorded" width="30%" height="30%" hidden></video>
-            <canvas id="capture" hidden></canvas>
+            
+            
         </div>
     </div>
     </div>
@@ -395,6 +402,7 @@ connection.onstream = function(event) {
     localStorage.setItem(connection.socketMessageEvent, connection.sessionid);
     document.getElementById("startRecord").disabled = false;
     document.getElementById("Screenshot").disabled = false;
+    document.getElementById('AudioWaveOn').disabled = false;
 	console.log("checker2");
     console.log(connection.codecs.video);
 	console.log(event.stream.getTracks().getSettings());
@@ -497,7 +505,7 @@ function stoprecord(){
 document.getElementById('displayRecord').onclick = function(){
    // var mediaElement = document.createElement('video'); 
    var mediaElement = document.getElementById("video-recorded");
-    //mediaElement.src = URL.createObjectURL(connection.currentRecorder.getBlob());   
+    mediaElement.src = URL.createObjectURL(connection.currentRecorder.getBlob());   
      document.getElementById('video-recorded').hidden = false; 
    //var mediaElement = document.getElementById("video-recorded");
 	mediaElement.play();
@@ -509,7 +517,7 @@ document.getElementById('Screenshot').onclick = function(){
     var canvasCap = document.getElementById("capture");
     canvasCap.width = videoPreview.videoWidth;
     canvasCap.height = videoPreview.videoHeight;
-    canvasCap.getContext("2d").drawImage(videoPreview,0,0,canvasCap.width,canvasCap.height);
+    canvasCap.getContext("2d").drawImage(videoView,0,0,canvasCap.width,canvasCap.height);
     canvasCap.hidden = false;
 }
 
@@ -527,9 +535,9 @@ connection.onleave = function(event) {
             // playing lats recorded blob
             var lastBlob = allRecordedBlobs[allRecordedBlobs.length - 1];
             //videoPreview.src = URL.createObjectURL(lastBlob);
-            videoView.src = URL.createObjectURL(lastBlob);
+            videoPreview.src = URL.createObjectURL(lastBlob);
             //videoPreview.play();
-            videoView.play();
+            videoPreview.play();
             allRecordedBlobs = [];
         } else if (connection.currentRecorder) {
             var recorder = connection.currentRecorder;
@@ -634,6 +642,10 @@ const supportsSetCodecPreferences = window.RTCRtpTransceiver &&
 
   const canvas = document.getElementById("time-date");
   const canvasview = canvas.captureStream();
+  
+videoView.srcObject = canvasview;
+//videoView.play();
+//videoPreview.style.visibility = "hidden";
 // ----------------------------------------------------------
 // ----------------- Object Detection -----------------------
 // ----------------------------------------------------------
@@ -704,10 +716,13 @@ function predictWebcam() {
     window.requestAnimationFrame(predictWebcam);
   });
 }
+
+
+ //================================================================================
 async function faceRecognizition(){
     const prediction = await model_face.estimateFaces(videoView, false);
-    canvas_face.width = videoView.offsetWidth;
-    canvas_face.height = videoView.offsetHeight;
+    canvas_face.width = videoPreview.offsetWidth;
+    canvas_face.height = videoPreview.offsetHeight;
     ctxFace.clearRect(0,0,canvas_face.width,canvas_face.height);
 
     console.log(prediction);
@@ -730,13 +745,97 @@ async function faceRecognizition(){
 videoPreview.addEventListener("loadeddata", async function(){
     
     model_face = await blazeface.load();
-    setInterval(faceRecognizition,100);
-    
+    console.log("ok");
+    setInterval(faceRecognizition,30);
+    videoView.play();
+    // Hide the videoPreview element
+  videoPreview.style.visibility = "hidden";
 });
 
+ //================================================================================
 
-videoView.srcObject = canvasview;
-videoView.play();
+// Hide the videoPreview element
+//videoPreview.style.visibility = 'hidden';
+//------------------------------------------
+//--------AudioWave-------------------------
+//------------------------------------------
+// Get a reference to the canvas and the audio context
+var canvasAudio = document.getElementById('audioWave');
+var analyser = undefined;
+document.getElementById('AudioWaveOn').onclick = function() {
+    canvasAudio.hidden = false;
+    audioWave();
+}
+
+
+function audioWave(){
+    
+    var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Create an analyser node
+    analyser = audioCtx.createAnalyser();
+
+    // Create a buffer to store the audio data
+    var dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+    // Get a reference to the canvas context
+    var canvasCtx = canvasAudio.getContext('2d');
+
+    // Function to draw the audio data to the canvas
+    function draw() {
+        // Get the audio data from the analyser
+        analyser.getByteTimeDomainData(dataArray);
+
+        // Clear the canvas
+        canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+        canvasCtx.fillRect(0, 0, canvasAudio.width, canvasAudio.height);
+
+        // Draw the audio data as a waveform
+        canvasCtx.lineWidth = 2;
+        canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+        canvasCtx.beginPath();
+
+        var sliceWidth = canvasAudio.width * 1.0 / analyser.frequencyBinCount;
+        var x = 0;
+
+        for(var i = 0; i < analyser.frequencyBinCount; i++) {
+            var v = dataArray[i] / 128.0;
+            var y = v * canvasAudio.height/2;
+
+            if(i === 0) {
+                canvasCtx.moveTo(x, y);
+            } else {
+                canvasCtx.lineTo(x, y);
+            }
+
+            x += sliceWidth;
+        }
+
+        canvasCtx.lineTo(canvasAudio.width, canvasAudio.height/2);
+        canvasCtx.stroke();
+
+        // Call the draw function again on the next animation frame
+        requestAnimationFrame(draw);
+    }
+
+    // Function to start visualizing the audio
+    function startVisualizing(stream) {
+        // Create a source from the stream and connect it to the analyser
+        var source = audioCtx.createMediaStreamSource(videoPreview.srcObject);
+        source.connect(analyser);
+
+        // Start drawing the audio data
+        draw();
+    }
+
+    // Request access to the microphone
+    navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+        .then(startVisualizing)
+        .catch(function(err) {
+            console.log('An error occurred: ' + err);
+        });
+}
+
 
 
 
