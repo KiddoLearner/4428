@@ -9,6 +9,66 @@
     margin: 2% 1%;
     cursor: pointer;
     }
+    /*ObjectPredection*/ 
+    
+    .highlighter {
+      background: rgba(0, 255, 0, 0.25);
+      border: 1px dashed #fff;
+      z-index: 998;
+      position: absolute;
+    }
+
+    #pObject{
+        position: absolute;
+        z-index: 998;
+    }
+    
+    video {
+        clear: both;
+        display: block;
+    }
+
+    section {
+        opacity: 1;
+        transition: opacity 500ms ease-in-out;
+    }
+
+    .removed {
+    display: none;
+    }
+
+    .invisible {
+    opacity: 0.2;
+    }
+
+    .videoView p, .classifyOnClick p {
+    position: absolute;
+    padding: 5px;
+    background-color: rgba(255, 111, 0, 0.85);
+    color: #FFF;
+    border: 1px dashed rgba(255, 255, 255, 0.7);
+    z-index: 2;
+    font-size: 12px;
+    margin: 0;
+    }
+
+    #time-date{
+        position: absolute;
+      top: 0px;
+      left: 0px;
+      font: 0px Arial;
+      color: white;
+      z-index: -1;
+    }
+
+    #liveView{
+        position: relative;
+    }
+    #faceRecog{
+        position:absolute; top:0px; left:0px;
+        z-index: -1;
+    }
+
     </style>
 
     <meta charset="utf-8">
@@ -36,35 +96,48 @@
   </div>
 </nav>
 
-    <h1>Hello, world!</h1> 
-		<table class="table" border="3">
-			<tr style="text-align: center; vertical-align: middle;">
-				<td>
-                    <tr>
-					  <div class="make-center">
-					  <input type="text" id="broadcast-id" value="EIE4428-Project" autocorrect=off autocapitalize=off size=20>
-					  <button id="open-or-join">Open or Join Broadcast</button>
+    
+    <div class="container">
+        <h1>Are you ready to connect to the host?</h1> 
+    <div class="row-g-5">
+        <div class="col mod-6">
+            <!--<section class="make-center invisible" id="demos">
+                <p style="margin: 0; padding: 0; padding-bottom: 20px;">
+                    <span>Supported Codec in your device:</span>
+                    <select id="codecPreferences" class="form-select" disabled>
+                        <option selected value="">Codec Lists</option>
+                    </p> </select> -->
+                <input type="text" id="broadcast-id" value="EIE4428-Project" autocorrect=off autocapitalize=off size=20 disabled>
+                <button id="open-or-join">Join Broadcast</button>
 
-					  <div class="make-center" id="broadcast-viewers-counter"></div>
-                      <div id="liveView" class="videoView" style="display: inline-block;">
-					  <video id="video-preview" controls loop></video></div>
-                      </tr>
-                    <tr>
-                    <section class="make-center invisible" id="demos">
-                        <p style="margin: 0; padding: 0; padding-bottom: 20px;">
-                                <div class="container">
-                            <span>Supported Codec in your device:</span>
-                            <select id="codecPreferences" class="form-select" disabled>
-                                <option selected value="">Codec Lists</option>
-                            </select>
-                    </tr></td>
-				<td><button id="startRecord" type="button" class="btn btn-primary">Start Recording</button>
-						<br><button id="stopRecord" type="button" class="btn btn-primary">Stop Recording</button>
-						<br><button id="displayRecord" type="button" class="btn btn-primary">Display Recording</button>
-				</td>
-				</tr>
+                <div class="make-center" id="broadcast-viewers-counter"></div>
+                <div id="liveView" class="videoView" style="display: inline-block;">
+                <video  id="video-view" controls loop width="100%" height="100%"></video>
+                <video  id="video-preview" controls loop width="100%" height="100%"></video>
+                <canvas id="time-date"></canvas>
+                <canvas id="faceRecog"></canvas>
+                </div>
+        </div>
+        <div class="col-mod-6">
+            <button id="startRecord" type="button" class="btn btn-primary" disabled>Start Recording</button>
+			<br><button id="stopRecord" type="button" class="btn btn-primary" disabled>Stop Recording</button>
+			<br><button id="displayRecord" type="button" class="btn btn-primary" disabled>Display Recording</button>
+            <br><button id="Screenshot" type="button" class="btn btn-primary" disabled>Screenshot</button>
+        </div>                 
+    </div>
+    </div>
+    <div class="container-fluid">
+    <div class="row-g-5">
+        <div class="col mod-6" class="make-center">
+            <video id="video-recorded" width="30%" height="30%" hidden></video>
+            <canvas id="capture" hidden></canvas>
+        </div>
+    </div>
+    </div>
+    
 
-</table>
+
+
 	
 
   
@@ -72,9 +145,13 @@
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 <script src="https://muazkhan.com:9001/socket.io/socket.io.js"></script>
   <script src="https://www.webrtc-experiment.com/RecordRTC.js"></script>
+  
 
 <!-- TensorFlow.js library -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js" type="text/javascript"></script>
+<!--TensorFlow - Face Recognize-->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
 <!-- coco-ssd model -> recognize things in images -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 
@@ -84,7 +161,8 @@
   <script>
 // recording is disabled because it is resulting for browser-crash
 // if you enable below line, please also uncomment above "RecordRTC.js"
-
+//document.getElementById("video-recorded").style.display="none";
+document.getElementById("broadcast-id").disabled=true;
 
 var enableRecordings = true;
 
@@ -153,7 +231,8 @@ connection.socketMessageEvent = 'scalable-media-broadcast-demo';
 // user need to connect server, so that others can reach him.
 connection.connectSocket(function(socket) {
     socket.on('logs', function(log) {
-        document.querySelector('h1').innerHTML = log.replace(/</g, '----').replace(/>/g, '___').replace(/----/g, '(<span style="color:red;">').replace(/___/g, '</span>)');
+        document.querySelector('h1').innerHTML = "You are connecting to host EIE4428-Project";
+        //document.querySelector('h1').innerHTML = log.replace(/</g, '----').replace(/>/g, '___').replace(/----/g, '(<span style="color:red;">').replace(/___/g, '</span>)');
     });
 
     // this event is emitted when a broadcast is already created.
@@ -218,6 +297,7 @@ window.onbeforeunload = function() {
 };
 
 var videoPreview = document.getElementById('video-preview');
+var videoView = document.getElementById("video-view");
 videoPreview.addEventListener('loadeddata', predictWebcam);
 
 connection.onstream = function(event) {
@@ -233,6 +313,29 @@ connection.onstream = function(event) {
     if (event.type === 'local') {
         videoPreview.muted = true;
     }
+
+    //Time&Date on Video
+    function displaytimedate(){
+                    canvas.width = videoPreview.offsetWidth;
+                    canvas.height = videoPreview.offsetHeight;
+
+                    var date = new Date().toLocaleString();
+                    var displaydate = date.replace(", ", " - ");
+                    const ctx = canvas.getContext("2d");
+                    ctx.font = "12px Arial";
+                    ctx.clearRect(0, 0, canvas.width, canvas.height)
+                    ctx.drawImage(canvas_face, 0, 0, canvas.width, canvas.height);
+                    ctx.fillText(displaydate,10,20);
+                }
+                
+
+                //var displayDate = date.getMonth() + 1 + "/" + date.getDate() + "/" + date.getYear();
+                //displayDate = displayDate + ":" + date.getHours() + date.getMinutes() + ":" + date.getSeconds();
+                //document.getElementById("time-date").innerHTML=displaydate;
+                
+                
+                setInterval(displaytimedate, 30);
+                
 
     if (connection.isInitiator == false && event.type === 'remote') {
 
@@ -276,6 +379,9 @@ connection.onstream = function(event) {
                 });
             }
 
+               
+
+
             // Firefox seems UN_ABLE to record remote MediaStream
             // WebAudio solution merely records audio
             // so recording is skipped for Firefox.
@@ -287,6 +393,8 @@ connection.onstream = function(event) {
 
     // to keep room-id in cache
     localStorage.setItem(connection.socketMessageEvent, connection.sessionid);
+    document.getElementById("startRecord").disabled = false;
+    document.getElementById("Screenshot").disabled = false;
 	console.log("checker2");
     console.log(connection.codecs.video);
 	console.log(event.stream.getTracks().getSettings());
@@ -316,6 +424,8 @@ document.getElementById('open-or-join').onclick = function() {
         data: true
     };
 	
+ 
+
 
 
     connection.getSocket(function(socket) {
@@ -335,6 +445,12 @@ document.getElementById('open-or-join').onclick = function() {
         });
     });
 };
+
+
+
+
+
+
 
 // <!-- document.getElementById('startRecord').onclick = function(){ -->
 
@@ -359,24 +475,42 @@ document.getElementById('open-or-join').onclick = function() {
 
 document.getElementById('startRecord').onclick = function(){
    // console.log("test");
-    repeatedlyRecordStream(videoPreview.srcObject);
+   document.getElementById('stopRecord').disabled = false;
+   document.getElementById('startRecord').disabled = true;
+    repeatedlyRecordStream(videoView.srcObject);
+    
 }
 
 document.getElementById("stopRecord").addEventListener('click', stoprecord);
 
 function stoprecord(){
    // console.log("test");
-   connection.currentRecorder.stopRecording();    
+   connection.currentRecorder.stopRecording();
+   document.getElementById('stopRecord').disabled = true;
+   document.getElementById('startRecord').disabled = false; 
+   document.getElementById('displayRecord').disabled = false;    
    console.log("recorder" + connection.currentRecorder);
-   console.log("get blob " + connection.currentRecorder.getBlob());
+  // console.log("get blob " + connection.currentRecorder.getBlob());
 
 }
 
 document.getElementById('displayRecord').onclick = function(){
-    var mediaElement = document.createElement('video'); 
-    mediaElement.src = URL.createObjectURL(connection.currentRecorder.getBlob());   
+   // var mediaElement = document.createElement('video'); 
+   var mediaElement = document.getElementById("video-recorded");
+    //mediaElement.src = URL.createObjectURL(connection.currentRecorder.getBlob());   
+     document.getElementById('video-recorded').hidden = false; 
+   //var mediaElement = document.getElementById("video-recorded");
 	mediaElement.play();
-	console.log(connection.currentRecorder.blob)
+	console.log(connection.currentRecorder.blob);
+    console.log( URL.createObjectURL(connection.currentRecorder.getBlob()));
+}
+
+document.getElementById('Screenshot').onclick = function(){
+    var canvasCap = document.getElementById("capture");
+    canvasCap.width = videoPreview.videoWidth;
+    canvasCap.height = videoPreview.videoHeight;
+    canvasCap.getContext("2d").drawImage(videoPreview,0,0,canvasCap.width,canvasCap.height);
+    canvasCap.hidden = false;
 }
 
 connection.onstreamended = function() {};
@@ -392,8 +526,10 @@ connection.onleave = function(event) {
         if (allRecordedBlobs.length) {
             // playing lats recorded blob
             var lastBlob = allRecordedBlobs[allRecordedBlobs.length - 1];
-            videoPreview.src = URL.createObjectURL(lastBlob);
-            videoPreview.play();
+            //videoPreview.src = URL.createObjectURL(lastBlob);
+            videoView.src = URL.createObjectURL(lastBlob);
+            //videoPreview.play();
+            videoView.play();
             allRecordedBlobs = [];
         } else if (connection.currentRecorder) {
             var recorder = connection.currentRecorder;
@@ -401,8 +537,10 @@ connection.onleave = function(event) {
             recorder.stopRecording(function() {
                 if (!connection.isUpperUserLeft) return;
 
-                videoPreview.src = URL.createObjectURL(recorder.getBlob());
-                videoPreview.play();
+                //videoPreview.src = URL.createObjectURL(recorder.getBlob());
+                //videoPreview.play();
+                videoView.src = URL.createObjectURL(recorder.getBlob());
+                videoView.play();
             });
         }
 
@@ -474,7 +612,7 @@ function disableInputButtons() {
 //     document.getElementById('broadcast-viewers-counter').innerHTML = 'Number of broadcast viewers: <b>' + event.numberOfBroadcastViewers + '</b>';
 // };
 
-const codecPreferences = document.getElementById('codecPreferences');
+/*const codecPreferences = document.getElementById('codecPreferences');
 const supportsSetCodecPreferences = window.RTCRtpTransceiver &&
   'setCodecPreferences' in window.RTCRtpTransceiver.prototype;
 
@@ -491,20 +629,29 @@ const supportsSetCodecPreferences = window.RTCRtpTransceiver &&
       codecPreferences.appendChild(option);
     });
     codecPreferences.disabled = false;
-  }
+  }*/
 
+
+  const canvas = document.getElementById("time-date");
+  const canvasview = canvas.captureStream();
 // ----------------------------------------------------------
 // ----------------- Object Detection -----------------------
 // ----------------------------------------------------------
 const demosSection = document.getElementById('demos');
 var model = undefined;
+// ----------------------------------------------------------
+// ----------------- Face Recognition -----------------------
+// ----------------------------------------------------------
+var model_face = undefined;
+var canvas_face = document.getElementById("faceRecog");
+var ctxFace = canvas_face.getContext("2d");
 // Before we can use COCO-SSD class we must wait for it to finish
 // loading. Machine Learning models can be large and take a moment to
 // get everything needed to run.
 cocoSsd.load().then(function (loadedModel) {
   model = loadedModel;
   // Show demo section now model is ready to use.
-  demosSection.classList.remove('invisible');
+  //demosSection.classList.remove('invisible');
 });
 
 
@@ -527,6 +674,7 @@ function predictWebcam() {
       // If we are over 66% sure we are sure we classified it right, draw it!
       if (predictions[n].score > 0.66) {
         const p = document.createElement('p');
+        p.setAttribute("id", "pObject");
         p.innerText = predictions[n].class  + ' - with ' 
             + Math.round(parseFloat(predictions[n].score) * 100) 
             + '% confidence.';
@@ -556,6 +704,39 @@ function predictWebcam() {
     window.requestAnimationFrame(predictWebcam);
   });
 }
+async function faceRecognizition(){
+    const prediction = await model_face.estimateFaces(videoView, false);
+    canvas_face.width = videoView.offsetWidth;
+    canvas_face.height = videoView.offsetHeight;
+    ctxFace.clearRect(0,0,canvas_face.width,canvas_face.height);
+
+    console.log(prediction);
+    ctxFace.drawImage(videoPreview, 0, 0);
+
+    prediction.forEach(function(pred){
+        ctxFace.beginPath();
+        ctxFace.lineWidth = "4";
+        ctxFace.strokeStyle = "blue";
+        ctxFace.rect(
+            pred.topLeft[0],
+            pred.topLeft[1],
+            pred.bottomRight[0] - pred.topLeft[0],
+            pred.bottomRight[1] - pred.topLeft[1]
+        );
+        ctxFace.stroke();
+    });
+};
+
+videoPreview.addEventListener("loadeddata", async function(){
+    
+    model_face = await blazeface.load();
+    setInterval(faceRecognizition,100);
+    
+});
+
+
+videoView.srcObject = canvasview;
+videoView.play();
 
 
 
