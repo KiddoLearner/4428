@@ -545,10 +545,10 @@ connection.onleave = function(event) {
             recorder.stopRecording(function() {
                 if (!connection.isUpperUserLeft) return;
 
-                //videoPreview.src = URL.createObjectURL(recorder.getBlob());
-                //videoPreview.play();
-                videoView.src = URL.createObjectURL(recorder.getBlob());
-                videoView.play();
+                videoPreview.src = URL.createObjectURL(recorder.getBlob());
+                videoPreview.play();
+                // videoPreview.src = URL.createObjectURL(recorder.getBlob());
+                // videoView.play();
             });
         }
 
