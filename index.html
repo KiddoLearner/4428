@@ -27,21 +27,28 @@
   </div>
 </nav>
 
-    <h1>Hello, world!</h1> 
+    <h1>Are you ready for broadcasting?</h1> 
 		<table class="table" border="3">
 			<tr style="text-align: center; vertical-align: middle;">
 				<td>
 					  <div class="make-center">
 					  <input type="text" id="broadcast-id" value="EIE4428-Project" autocorrect=off autocapitalize=off size=20>
-					  <button id="open-or-join">Open or Join Broadcast</button>
+					  <button id="open-or-join">Open Broadcast</button>
 
 					  <div class="make-center" id="broadcast-viewers-counter"></div>
 
 					  <video id="video-preview" controls loop></video></td>
-				<td><button id="startRecord" type="button" class="btn btn-primary">Start Recording</button>
+				<td>
+                    <div>Broadcast Settings:</div>
+                    <div></div>
+                    <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="audioSwitch" checked>
+                    <label class="form-check-label" for="audioSwitch">Audio</label>
+                    </div>
+                  <!--<button id="startRecord" type="button" class="btn btn-primary">Start Recording</button>
 						<br><button id="stopRecord" type="button" class="btn btn-primary">Stop Recording</button>
 						<br><button id="displayRecord" type="button" class="btn btn-primary">Display Recording</button>
-				</td>
+				--></td>
 				</tr>
 
 </table>
@@ -57,7 +64,6 @@
   <script>
 // recording is disabled because it is resulting for browser-crash
 // if you enable below line, please also uncomment above "RecordRTC.js"
-
 
 var enableRecordings = true;
 
@@ -268,6 +274,11 @@ connection.onstream = function(event) {
 // if broadcast is available, simply join it. i.e. "join-broadcaster" event should be emitted.
 // if broadcast is absent, simply create it. i.e. "start-broadcasting" event should be fired.
 document.getElementById('open-or-join').onclick = function() {
+
+//Variables settings
+var audioSwitch = document.getElementById("audioSwitch").checked;
+
+console.log(audioSwitch);
     var broadcastId = document.getElementById('broadcast-id').value;
     if (broadcastId.replace(/^\s+|\s+$/g, '').length <= 0) {
         alert('Please enter broadcast-id');
@@ -278,12 +289,20 @@ document.getElementById('open-or-join').onclick = function() {
     document.getElementById('open-or-join').disabled = true;
 
     connection.extra.broadcastId = broadcastId;
-
     connection.session = {
-        audio: true,
+        audio: audioSwitch,
         video: true,
         oneway: true
     };
+
+    if(audioSwitch == false){
+        connection.mediaConstraints = {
+    video: true,
+    audio: false
+};
+    }
+    
+    
 	
 
 
