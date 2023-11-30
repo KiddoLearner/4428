@@ -124,12 +124,22 @@
                 </div>
         </div>
         <div class="col-mod-6">
-            <button id="startRecord" type="button" class="btn btn-primary" disabled>Start Recording</button>
-            <button id="AudioWaveOn" type="button" class="btn btn-primary" disabled>AudioWaveOn</button>
-			<br><button id="stopRecord" type="button" class="btn btn-primary" disabled>Stop Recording</button>
-            <button id="AudioWaveOff" type="button" class="btn btn-primary" disabled>AudioWaveOff</button>
-			<br><button id="displayRecord" type="button" class="btn btn-primary" disabled>Display Recording</button>
-            <br><button id="Screenshot" type="button" class="btn btn-primary" disabled>Screenshot</button>
+            <div class="col-mod-6">
+                <button id="AudioWaveOn" type="button" class="btn btn-primary" disabled>AudioWaveOn</button>
+                <button id="AudioWaveOff" type="button" class="btn btn-primary" disabled>AudioWaveOff</button>
+            </div>
+            <div class="col-mod-6">
+                <button id="startRecord" type="button" class="btn btn-primary" disabled>Start Recording</button>
+                <button id="stopRecord" type="button" class="btn btn-primary" disabled>Stop Recording</button>
+            </div>
+            <div class="col-mod-6">
+                <button id="objectDetectOn" type="button" class="btn btn-primary" disabled>ObjectDetectOn</button>
+                <button id="objectDetectOff" type="button" class="btn btn-primary" disabled>ObjectDetectOff</button>
+            </div>
+            <div class="col-mod-6">
+                <button id="displayRecord" type="button" class="btn btn-primary" disabled>Display Recording</button>
+                <button id="Screenshot" type="button" class="btn btn-primary" disabled>Screenshot</button>
+            </div>
         </div>                 
     </div>
     </div>
@@ -141,13 +151,7 @@
         </div>
     </div>
     </div>
-    
 
-
-
-	
-
-  
   <script src="https://muazkhan.com:9001/dist/RTCMultiConnection.min.js"></script>
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 <script src="https://muazkhan.com:9001/socket.io/socket.io.js"></script>
@@ -403,6 +407,7 @@ connection.onstream = function(event) {
     document.getElementById("startRecord").disabled = false;
     document.getElementById("Screenshot").disabled = false;
     document.getElementById('AudioWaveOn').disabled = false;
+    document.getElementById('objectDetectOn').disabled = false;
 	console.log("checker2");
     console.log(connection.codecs.video);
 	console.log(event.stream.getTracks().getSettings());
@@ -485,7 +490,10 @@ document.getElementById('startRecord').onclick = function(){
    // console.log("test");
    document.getElementById('stopRecord').disabled = false;
    document.getElementById('startRecord').disabled = true;
-    repeatedlyRecordStream(videoView.srcObject);
+   var trackOfCanvasView = canvasview.getTracks();
+   var trackOfEventView = event.stream.getTracks();
+   let combinedVideoView = new MediaStream([...trackOfCanvasView, ...trackOfEventView]);
+    repeatedlyRecordStream(combinedVideoView);
     
 }
 
@@ -566,8 +574,10 @@ function repeatedlyRecordStream(stream) {
         return;
     }
 
+    
     connection.currentRecorder = RecordRTC(stream, {
-        type: 'video'
+        type: 'video',
+        mimeType: 'video/mp4'
     });
 
     connection.currentRecorder.startRecording();
@@ -646,11 +656,7 @@ const supportsSetCodecPreferences = window.RTCRtpTransceiver &&
 videoView.srcObject = canvasview;
 //videoView.play();
 //videoPreview.style.visibility = "hidden";
-// ----------------------------------------------------------
-// ----------------- Object Detection -----------------------
-// ----------------------------------------------------------
-const demosSection = document.getElementById('demos');
-var model = undefined;
+
 // ----------------------------------------------------------
 // ----------------- Face Recognition -----------------------
 // ----------------------------------------------------------
@@ -666,16 +672,47 @@ cocoSsd.load().then(function (loadedModel) {
   //demosSection.classList.remove('invisible');
 });
 
-
+// ----------------------------------------------------------
+// ----------------- Object Detection -----------------------
+// ----------------------------------------------------------
+const demosSection = document.getElementById('demos');
+var model = undefined;
 const liveView = document.getElementById('liveView');
 // Keep a reference of all the child elements we create
 // so we can remove them easilly on each render.
 var children = [];
 // Prediction loop!
+var objectRecognizeBool = false;
+document.getElementById('objectDetectOn').onclick = function() {
+
+    objectRecognizeBool = true;
+    document.getElementById('objectDetectOn').disabled = true;
+    document.getElementById('objectDetectOff').disabled = false;
+    setTimeout(function() {
+        predictWebcam();
+       }, 1200)
+};
+
+document.getElementById('objectDetectOff').onclick = function() {
+    document.getElementById('objectDetectOn').disabled = false;
+    document.getElementById('objectDetectOff').disabled = true;
+
+    objectRecognizeBool = false;
+    for (let i = 0; i < children.length; i++) {
+      liveView.removeChild(children[i]);
+    }
+    children.splice(0);
+    clearTimeout(predictWebcam);
+};
+
 function predictWebcam() {
   // Now let's start classifying the stream.
   model.detect(videoPreview).then(function (predictions) {
     // Remove any highlighting we did previous frame.
+
+    if(objectRecognizeBool == true){
+
+    
     for (let i = 0; i < children.length; i++) {
       liveView.removeChild(children[i]);
     }
@@ -714,6 +751,7 @@ function predictWebcam() {
     
     // Call this function again to keep predicting when the browser is ready.
     window.requestAnimationFrame(predictWebcam);
+}
   });
 }
 
@@ -747,6 +785,7 @@ videoPreview.addEventListener("loadeddata", async function(){
     model_face = await blazeface.load();
     console.log("ok");
     setInterval(faceRecognizition,30);
+    //copyAudio();
     videoView.play();
     // Hide the videoPreview element
   videoPreview.style.visibility = "hidden";
@@ -763,7 +802,15 @@ videoPreview.addEventListener("loadeddata", async function(){
 var canvasAudio = document.getElementById('audioWave');
 var analyser = undefined;
 document.getElementById('AudioWaveOn').onclick = function() {
+    document.getElementById('AudioWaveOn').disabled = true;
+    document.getElementById('AudioWaveOff').disabled = false;
     canvasAudio.hidden = false;
+    audioWave();
+}
+document.getElementById('AudioWaveOff').onclick = function() {
+    document.getElementById('AudioWaveOn').disabled = false;
+    document.getElementById('AudioWaveOff').disabled = true;
+    canvasAudio.hidden = true;
     audioWave();
 }
 
@@ -835,8 +882,6 @@ function audioWave(){
             console.log('An error occurred: ' + err);
         });
 }
-
-
 
 
 </script>
