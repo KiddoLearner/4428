@@ -324,6 +324,10 @@ connection.onstream = function(event) {
     if (event.type === 'local') {
         videoPreview.muted = true;
     }
+//if have audio, can use audio wave
+    if(event.stream.getAudioTracks().length>=1){
+        document.getElementById('AudioWaveOn').disabled=false;
+    }
 
     //Time&Date on Video
     function displaytimedate(){
@@ -863,7 +867,6 @@ function audioWave(){
 
     // Function to start visualizing the audio
     function startVisualizing(stream) {
-        document.getElementById('AudioWaveOn').disabled = false;
         // Create a source from the stream and connect it to the analyser
         var source = audioCtx.createMediaStreamSource(videoPreview.srcObject);
         source.connect(analyser);
@@ -876,7 +879,6 @@ function audioWave(){
     navigator.mediaDevices.getUserMedia({ audio: true, video: false })
         .then(startVisualizing)
         .catch(function(err) {
-            document.getElementById('AudioWaveOn').disabled=true;
             console.log('An error occurred: ' + err);
         });
 }
