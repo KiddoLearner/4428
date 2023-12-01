@@ -876,6 +876,7 @@ function audioWave(){
     navigator.mediaDevices.getUserMedia({ audio: true, video: false })
         .then(startVisualizing)
         .catch(function(err) {
+            document.getElementById('audioWaveOn').disabled=true;
             console.log('An error occurred: ' + err);
         });
 }
