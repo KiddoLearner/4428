@@ -406,7 +406,6 @@ connection.onstream = function(event) {
     localStorage.setItem(connection.socketMessageEvent, connection.sessionid);
     document.getElementById("startRecord").disabled = false;
     document.getElementById("Screenshot").disabled = false;
-    document.getElementById('AudioWaveOn').disabled = false;
     document.getElementById('objectDetectOn').disabled = false;
 	console.log("checker2");
     console.log(connection.codecs.video);
@@ -864,6 +863,7 @@ function audioWave(){
 
     // Function to start visualizing the audio
     function startVisualizing(stream) {
+        document.getElementById('AudioWaveOn').disabled = false;
         // Create a source from the stream and connect it to the analyser
         var source = audioCtx.createMediaStreamSource(videoPreview.srcObject);
         source.connect(analyser);
