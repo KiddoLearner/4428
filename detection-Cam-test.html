@@ -490,10 +490,7 @@ document.getElementById('startRecord').onclick = function(){
    // console.log("test");
    document.getElementById('stopRecord').disabled = false;
    document.getElementById('startRecord').disabled = true;
-   var trackOfCanvasView = canvasview.getTracks();
-   var trackOfEventView = event.stream.getTracks();
-   let combinedVideoView = new MediaStream([...trackOfCanvasView, ...trackOfEventView]);
-    repeatedlyRecordStream(combinedVideoView);
+    repeatedlyRecordStream(videoView.srcObject);
     
 }
 
