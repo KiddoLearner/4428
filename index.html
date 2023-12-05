@@ -277,7 +277,7 @@ var audioSwitch = document.getElementById("audioSwitch").checked;
     }
 
     document.getElementById('open-or-join').disabled = true;
-    broadcastId.disabled = true;
+    document.getElementById('broadcast-id').disabled = true;
 
     connection.extra.broadcastId = broadcastId;
     connection.session = {
