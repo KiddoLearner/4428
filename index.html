@@ -45,20 +45,17 @@
                     <input class="form-check-input" type="checkbox" role="switch" id="audioSwitch" checked>
                     <label class="form-check-label" for="audioSwitch">Audio</label>
                     </div>
-                  <!--<button id="startRecord" type="button" class="btn btn-primary">Start Recording</button>
-						<br><button id="stopRecord" type="button" class="btn btn-primary">Stop Recording</button>
-						<br><button id="displayRecord" type="button" class="btn btn-primary">Display Recording</button>
-				--></td>
+                  </td>
 				</tr>
 
 </table>
 	
 
   
-  <script src="https://muazkhan.com:9001/dist/RTCMultiConnection.min.js"></script>
-  <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+<script src="https://muazkhan.com:9001/dist/RTCMultiConnection.min.js"></script>
+<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 <script src="https://muazkhan.com:9001/socket.io/socket.io.js"></script>
-  <script src="https://www.webrtc-experiment.com/RecordRTC.js"></script>
+<script src="https://www.webrtc-experiment.com/RecordRTC.js"></script>
 <!--CodecsHandler-->
 <script src="CodecsHandler.js"></script>
   <script>
@@ -72,13 +69,11 @@ var connection = new RTCMultiConnection();
 // Specify the codec of streaming video
 connection.codecs.video = 'VP9';
 connection.preferVP9 = true;
-console.log("Check for codecs");
-console.log(connection.codecs.video);
 // https://www.rtcmulticonnection.org/docs/iceServers/
 // first step, ignore default STUN+TURN servers
 connection.iceServers = [];
 
-// last step, set TURN url (recommended)
+// Set up the Turn server for mobile data enter(24hr vaild only)
 connection.iceServers.push({
     urls: 'turn:global.turn.twilio.com:3478?transport=udp',
     credential: '66CnZY4v08wSWY8tPt+1MU7Zi87/HW2hPS+1XKm6P88=',
@@ -94,15 +89,7 @@ connection.iceServers.push({
         'stun:stun2.l.google.com:19302'
     ]
 }); 
-// use your own TURN-server here!
-// connection.iceServers = [{
-//     'urls': [
-//         'stun:stun.l.google.com:19302',
-//         'stun:stun1.l.google.com:19302',
-//         'stun:stun2.l.google.com:19302',
-//     ]
-// }];
-console.log("checker");
+
 console.log(connection.isInitiator);
 
 // its mandatory in v3
@@ -195,6 +182,10 @@ window.onbeforeunload = function() {
 var videoPreview = document.getElementById('video-preview');
 
 connection.onstream = function(event) {
+    //Disable the option of audio on/off
+    document.getElementById("audioSwitch").disabled=true;
+
+    //Prevent the receiver host another stream
     if (connection.isInitiator && event.type !== 'local') {
         return;
     }
@@ -264,8 +255,6 @@ connection.onstream = function(event) {
 
     // to keep room-id in cache
     localStorage.setItem(connection.socketMessageEvent, connection.sessionid);
-	console.log("checker2");
-	console.log(event.stream.getTracks());
 };
 
 
@@ -278,8 +267,9 @@ document.getElementById('open-or-join').onclick = function() {
 //Variables settings
 var audioSwitch = document.getElementById("audioSwitch").checked;
 
-console.log(audioSwitch);
+
     var broadcastId = document.getElementById('broadcast-id').value;
+    
     if (broadcastId.replace(/^\s+|\s+$/g, '').length <= 0) {
         alert('Please enter broadcast-id');
         document.getElementById('broadcast-id').focus();
@@ -287,6 +277,7 @@ console.log(audioSwitch);
     }
 
     document.getElementById('open-or-join').disabled = true;
+    broadcastId.disabled = true;
 
     connection.extra.broadcastId = broadcastId;
     connection.session = {
@@ -295,16 +286,13 @@ console.log(audioSwitch);
         oneway: true
     };
 
+    //Switch off the audio source when streaming
     if(audioSwitch == false){
         connection.mediaConstraints = {
-    video: true,
-    audio: false
-};
+            video: true,
+            audio: false
+        };
     }
-    
-    
-	
-
 
     connection.getSocket(function(socket) {
         socket.emit('check-broadcast-presence', broadcastId, function(isBroadcastExists) {
@@ -323,28 +311,6 @@ console.log(audioSwitch);
         });
     });
 };
-
-document.getElementById('startRecord').onclick = function(){
-   // console.log("test");
-    repeatedlyRecordStream(videoPreview.srcObject);
-}
-
-document.getElementById("stopRecord").addEventListener('click', stoprecord);
-
-function stoprecord(){
-   // console.log("test");
-   connection.currentRecorder.stopRecording();    
-   console.log("recorder" + connection.currentRecorder);
-   console.log("get blob " + connection.currentRecorder.getBlob());
-
-}
-
-document.getElementById('displayRecord').onclick = function(){
-    var mediaElement = document.createElement('video'); 
-    mediaElement.src = URL.createObjectURL(connection.currentRecorder.getBlob());   
-	mediaElement.play();
-	console.log(connection.currentRecorder.blob)
-}
 
 connection.onstreamended = function() {};
 
